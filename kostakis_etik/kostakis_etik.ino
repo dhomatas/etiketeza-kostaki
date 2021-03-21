@@ -1,8 +1,12 @@
 #include <SimpleRotary.h>
 
 #include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+//#include <LiquidCrystal_I2C.h>
+#include<LiquidCrystal_I2C_Hangul.h>
+//#include<Wire.h>
+
+LiquidCrystal_I2C_Hangul lcd(0x27,16,2);
+//LiquidCrystal_I2C lcd(0x27, 16, 2);
 //Rotary r = Rotary(4, 5,6);
 SimpleRotary rotary(4, 5,6);
 //Rotary r_int = Rotary(2, 3);
@@ -16,7 +20,7 @@ SimpleRotary rotary(4, 5,6);
 
 #include <EEPROM.h>
 
-int index = 50
+int index = 50;
 unsigned char result;
 boolean mode_auto = true;
 boolean mode_save=false;
@@ -26,6 +30,7 @@ byte menu_index;
 byte length0, pause0  ;
 byte step_int = 2;
 int bottles;
+
 byte bounce_time=500;
 volatile int l = 0;
 
@@ -38,8 +43,10 @@ void setup()
   Serial.println(" Ëtiketeza ");
 	lcd.begin();
 	lcd.backlight();
-  r.begin(true);
- //  r_int.begin();
+  rotary.setTrigger(HIGH);
+  rotary.setDebounceDelay(500);
+  rotary.setErrorDelay(250);
+  rotary.setDebounceDelay(500);
 
 
  pinMode(2,INPUT_PULLUP); 
@@ -65,19 +72,7 @@ void setup()
 
   digitalWrite(EN_PIN, LOW); //activate driver
 
-
-
-
-
 }
-
-  /*
-  PCICR |= (1 << PCIE2);
-  PCMSK2 |= (1 << PCINT18) | (1 << PCINT19);
-  sei();
-  Serial.println(" Interrupt  set ");
-  */
-
 
 void loop(){
   Serial.println(" Program start ");
@@ -88,9 +83,10 @@ lcd.print("Ready");
 lcd.setCursor (0,1);
 lcd.print("Press Start");
 mark0:
-  if ( digitalRead(rotary_switch)== LOW){
-delay(bounce_time);
-menu_index = setup_menu();
+	int t = rotary.pushTime();
+		if ( t > 1000 ) {
+			rotary.resetPush();
+			menu_index = setup_menu();
 switch (menu_index){
     case 0:
           menu_auto();
@@ -111,9 +107,11 @@ switch (menu_index){
          break;
   
    } // switch
-   delay(bounce_time);
+   }//if
+    else{ // startjob();
+    }
    goto mark00;
-  }//if
+  
 
    byte i;  // 0 = not turning, 1 = CW, 2 = CCW
   i = rotary.rotate();
